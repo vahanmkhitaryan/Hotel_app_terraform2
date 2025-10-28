@@ -1,21 +1,17 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# This script installs dependencies and runs the project
-# Run this with root user on Linux Machines(Rocky Linux)
-
-
-# Start apache
-service apache2 start
-service apache2 enable
-
-# Replace 'hostname', 'username', and 'password' with the actual RDS credentials.
-mysql -h <hostname> -u <username> -p <password> < ./bluebirdhotel.sql
-
-# Copy project to /var/www/html
-rm -r /var/www/html/index.html
-cp -r ./ /var/www/html/
-
-# restart apache
+# Start Apache
 service apache2 start
 
-echo "View project at: http://localhost:80/"
+# Load DB schema (using passed env vars)
+mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < ./bluebirdhotel.sql
+
+# Deploy app to Apache root
+rm -f /var/www/html/index.html
+cp -r ./* /var/www/html/
+
+# Restart Apache (in case config files changed)
+service apache2 restart
+
+echo "✅ App deployed! Access it via: http://localhost"
